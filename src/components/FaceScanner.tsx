@@ -260,7 +260,7 @@ const FaceScanner = () => {
     });
   }, []);
 
-  // Initialize MediaPipe Face Mesh
+  // Initialize MediaPipe Face Mesh (load model early so detection isn't stuck)
   useEffect(() => {
     const initFaceMesh = async () => {
       const faceMesh = new FaceMesh({
@@ -272,9 +272,15 @@ const FaceScanner = () => {
       faceMesh.setOptions({
         maxNumFaces: 1,
         refineLandmarks: true,
-        minDetectionConfidence: 0.5,
-        minTrackingConfidence: 0.5,
+        minDetectionConfidence: 0.3,
+        minTrackingConfidence: 0.3,
       });
+
+      try {
+        await faceMesh.initialize();
+      } catch (e) {
+        console.warn('FaceMesh pre-init failed, will init on first frame:', e);
+      }
 
       faceMesh.onResults((results) => {
         if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
@@ -331,11 +337,14 @@ const FaceScanner = () => {
       if (!videoRef.current || !faceMeshRef.current) return;
 
       try {
-        const camera = new Camera(videoRef.current, {
+        const video = videoRef.current;
+        const camera = new Camera(video, {
           onFrame: async () => {
-            if (faceMeshRef.current && videoRef.current) {
-              await faceMeshRef.current.send({ image: videoRef.current });
-            }
+            if (!faceMeshRef.current || !videoRef.current) return;
+            const v = videoRef.current;
+            // Only send when video has real frames (avoid black/empty frames so face is detected)
+            if (v.readyState < 2 || v.videoWidth === 0 || v.videoHeight === 0) return;
+            await faceMeshRef.current.send({ image: v });
           },
           width: 1280,
           height: 720,
@@ -349,7 +358,7 @@ const FaceScanner = () => {
       }
     };
 
-    const timer = setTimeout(startCamera, 100);
+    const timer = setTimeout(startCamera, 300);
     return () => clearTimeout(timer);
   }, [cameraAllowed]);
 
@@ -455,6 +464,7 @@ const FaceScanner = () => {
           <div className="text-center fade-in">
             <div className="w-24 h-24 border-2 border-scanner-glow rounded-full mx-auto mb-4 scanner-pulse" />
             <p className="text-lg text-muted-foreground font-vazir">در حال جستجوی چهره...</p>
+            <p className="text-sm text-muted-foreground/80 font-vazir mt-2">صورت خود را در مرکز کادر قرار دهید</p>
           </div>
         </div>
       )}
