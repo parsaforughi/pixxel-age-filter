@@ -35,6 +35,8 @@ const ANNOTATION_POINTS = {
 const FaceScanner = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [cameraAllowed, setCameraAllowed] = useState(false);
+  const [requestingCamera, setRequestingCamera] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [faceDetected, setFaceDetected] = useState(false);
   const [metrics, setMetrics] = useState<SkinMetrics | null>(null);
@@ -43,6 +45,25 @@ const FaceScanner = () => {
   const faceMeshRef = useRef<FaceMesh | null>(null);
   const cameraRef = useRef<Camera | null>(null);
   const metricsHistoryRef = useRef<SkinMetrics[]>([]);
+
+  // Request camera permission immediately so user isn't stuck on "searching for face"
+  const requestCameraAccess = useCallback(async () => {
+    if (cameraAllowed || requestingCamera) return;
+    setRequestingCamera(true);
+    setCameraError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
+      });
+      stream.getTracks().forEach((t) => t.stop());
+      setCameraAllowed(true);
+    } catch (err) {
+      console.error('Camera permission error:', err);
+      setCameraError('دسترسی به دوربین امکان‌پذیر نیست. لطفاً در تنظیمات مرورگر اجازه دهید.');
+    } finally {
+      setRequestingCamera(false);
+    }
+  }, [cameraAllowed, requestingCamera]);
   
 
   // Smooth metrics over time for maximum stability
@@ -302,8 +323,10 @@ const FaceScanner = () => {
     };
   }, [calculateMetrics, drawOverlay, smoothMetrics]);
 
-  // Start camera
+  // Start camera only after user has granted permission (fast permission prompt)
   useEffect(() => {
+    if (!cameraAllowed) return;
+
     const startCamera = async () => {
       if (!videoRef.current || !faceMeshRef.current) return;
 
@@ -326,9 +349,9 @@ const FaceScanner = () => {
       }
     };
 
-    const timer = setTimeout(startCamera, 500);
+    const timer = setTimeout(startCamera, 100);
     return () => clearTimeout(timer);
-  }, []);
+  }, [cameraAllowed]);
 
   // Convert number to Persian numerals
   const toPersianNumber = (num: number): string => {
@@ -336,10 +359,42 @@ const FaceScanner = () => {
     return num.toString().split('').map(d => persianDigits[parseInt(d)] || d).join('');
   };
 
+  // Initial screen: request camera permission so it's granted quickly (no stuck on "searching for face")
+  if (!cameraAllowed && !cameraError) {
+    return (
+      <div className="fixed inset-0 bg-background flex flex-col items-center justify-center p-6" dir="rtl">
+        <div className="w-20 h-20 rounded-full border-2 border-primary/50 flex items-center justify-center mb-6">
+          <span className="text-4xl">📷</span>
+        </div>
+        <h1 className="text-xl md:text-2xl font-bold text-foreground font-vazir text-center mb-2">
+          تحلیل سن پوست
+        </h1>
+        <p className="text-muted-foreground font-vazir text-center mb-8 max-w-sm">
+          برای شروع، دسترسی به دوربین را مجاز کنید تا تصویر شما برای تحلیل استفاده شود.
+        </p>
+        <button
+          type="button"
+          onClick={requestCameraAccess}
+          disabled={requestingCamera}
+          className="px-8 py-4 rounded-xl bg-primary text-primary-foreground font-vazir font-medium text-lg hover:opacity-90 disabled:opacity-60 transition-opacity"
+        >
+          {requestingCamera ? 'در حال درخواست...' : 'شروع و دسترسی به دوربین'}
+        </button>
+      </div>
+    );
+  }
+
   if (cameraError) {
     return (
-      <div className="fixed inset-0 bg-background flex items-center justify-center">
-        <p className="text-xl text-muted-foreground font-vazir">{cameraError}</p>
+      <div className="fixed inset-0 bg-background flex flex-col items-center justify-center p-6" dir="rtl">
+        <p className="text-xl text-muted-foreground font-vazir text-center mb-4">{cameraError}</p>
+        <button
+          type="button"
+          onClick={() => { setCameraError(null); setCameraAllowed(false); }}
+          className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-vazir"
+        >
+          تلاش مجدد
+        </button>
       </div>
     );
   }
