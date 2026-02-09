@@ -1,0 +1,149 @@
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Medical AI Skin Scanner Design System
+   Dark clinical aesthetic with Persian typography
+*/
+
+@layer base {
+  :root {
+    /* Deep clinical dark theme */
+    --background: 220 20% 4%;
+    --foreground: 210 20% 98%;
+
+    --card: 220 18% 8%;
+    --card-foreground: 210 20% 98%;
+
+    --popover: 220 18% 8%;
+    --popover-foreground: 210 20% 98%;
+
+    /* Clinical teal accent */
+    --primary: 180 60% 45%;
+    --primary-foreground: 220 20% 4%;
+
+    --secondary: 220 15% 15%;
+    --secondary-foreground: 210 20% 90%;
+
+    --muted: 220 15% 12%;
+    --muted-foreground: 215 15% 55%;
+
+    --accent: 180 50% 40%;
+    --accent-foreground: 210 20% 98%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 210 20% 98%;
+
+    --border: 220 15% 18%;
+    --input: 220 15% 18%;
+    --ring: 180 60% 45%;
+
+    --radius: 0.5rem;
+
+    /* Scanner-specific tokens */
+    --scanner-mesh: 210 10% 70%;
+    --scanner-line: 0 0% 100%;
+    --scanner-overlay: 220 20% 8%;
+    --scanner-glow: 180 80% 50%;
+    --scanner-text: 0 0% 100%;
+    --scanner-metric: 180 60% 55%;
+
+    /* Sidebar (unused but required) */
+    --sidebar-background: 220 18% 6%;
+    --sidebar-foreground: 210 20% 90%;
+    --sidebar-primary: 180 60% 45%;
+    --sidebar-primary-foreground: 220 20% 4%;
+    --sidebar-accent: 220 15% 12%;
+    --sidebar-accent-foreground: 210 20% 90%;
+    --sidebar-border: 220 15% 18%;
+    --sidebar-ring: 180 60% 45%;
+  }
+
+  .dark {
+    --background: 220 20% 4%;
+    --foreground: 210 20% 98%;
+    --card: 220 18% 8%;
+    --card-foreground: 210 20% 98%;
+    --popover: 220 18% 8%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 180 60% 45%;
+    --primary-foreground: 220 20% 4%;
+    --secondary: 220 15% 15%;
+    --secondary-foreground: 210 20% 90%;
+    --muted: 220 15% 12%;
+    --muted-foreground: 215 15% 55%;
+    --accent: 180 50% 40%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 220 15% 18%;
+    --input: 220 15% 18%;
+    --ring: 180 60% 45%;
+    --sidebar-background: 220 18% 6%;
+    --sidebar-foreground: 210 20% 90%;
+    --sidebar-primary: 180 60% 45%;
+    --sidebar-primary-foreground: 220 20% 4%;
+    --sidebar-accent: 220 15% 12%;
+    --sidebar-accent-foreground: 210 20% 90%;
+    --sidebar-border: 220 15% 18%;
+    --sidebar-ring: 180 60% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Vazirmatn', system-ui, sans-serif;
+    direction: rtl;
+  }
+}
+
+/* Scanner animations */
+@layer utilities {
+  .scanner-pulse {
+    animation: scanner-pulse 2s ease-in-out infinite;
+  }
+
+  .scanner-scan {
+    animation: scanner-scan 3s linear infinite;
+  }
+
+  .fade-in {
+    animation: fade-in 0.5s ease-out forwards;
+  }
+
+  @keyframes scanner-pulse {
+    0%, 100% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes scanner-scan {
+    0% {
+      transform: translateY(-100%);
+    }
+    100% {
+      transform: translateY(100%);
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
